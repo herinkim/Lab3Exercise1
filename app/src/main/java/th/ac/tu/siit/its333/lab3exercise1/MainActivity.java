@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,11 +36,134 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void buttonClicked(View v) {
+        // Check which button was clicked
+        int btnID = v.getId();
+        switch(btnID)
+        {
+            case R.id.button:
+                // Reset
+                resetAll();
+                break;
+            case R.id.button2:
+                // Add course
+                Intent addCourseAct = new Intent(this, CourseActivity.class);
+                startActivityForResult(addCourseAct, 111);
+                break;
+            case R.id.button4:
+                // Show course list
+                Intent showCourseAct = new Intent(this, CourseListActivity.class);
+
+                String showCourseList = "";
+                for (int i = 0; i<listCodes.size(); i++)
+                {
+                    showCourseList += String.format("%s (%d credits) = %s \n", listCodes.get(i), listCredits.get(i), listGrades.get(i));
+                }
+
+                System.out.println(showCourseList);
+                showCourseAct.putExtra("listCourse", showCourseList);
+
+                startActivity(showCourseAct);
+                break;
+        }
+    }
+
+    public void resetAll()
+    {
+        cr = 0;
+        gp = 0.0;
+        gpa = 0.0;
+
+        listCodes = new ArrayList<String>();
+        listCredits = new ArrayList<Integer>();
+        listGrades = new ArrayList<String>();
+
+        TextView tvGP = (TextView) findViewById(R.id.tvGP);
+        tvGP.setText(Double.toString(gp));
+
+        TextView tvCredits = (TextView) findViewById(R.id.tvCR);
+        tvCredits.setText(Integer.toString(cr));
+
+        TextView tvGPA = (TextView) findViewById(R.id.tvGPA);
+        tvGPA.setText(Double.toString(gpa));
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Values from child activity
+
+        if(requestCode == 111)
+        {
+            // User adds a new course grade
+            if(resultCode == RESULT_OK)
+            {
+                String courseCode = data.getStringExtra("code");
+                listCodes.add(courseCode);
+
+                int courseCredit = data.getIntExtra("credit", 0);
+                listCredits.add(courseCredit);
+
+                String courseGrade = data.getStringExtra("grade");
+                listGrades.add(courseGrade);
+
+                showData();
+            }
+        }
+    }
+
+    public void showData()
+    {
+        // Calculate total grade points and total credits
+        cr = 0;
+        gp = 0.0;
+        gpa = 0.0;
+
+        for (int i = 0; i < listGrades.size(); i++)
+        {
+            double credit = listCredits.get(i);
+
+            switch(listGrades.get(i))
+            {
+                case "A":
+                    gp += (4.0 * credit);
+                    break;
+                case "B+":
+                    gp += (3.5 * credit);
+                    break;
+                case "B":
+                    gp += (3.0 * credit);
+                    break;
+                case "C+":
+                    gp += (2.5 * credit);
+                    break;
+                case "C":
+                    gp += (2.0 * credit);
+                    break;
+                case "D+":
+                    gp += (1.5 * credit);
+                    break;
+                case "D":
+                    gp += (1.0 * credit);
+                    break;
+                case "F":
+                    gp += 0.0;
+                    break;
+            }
+
+            cr+=credit;
+        }
+
+        // Show total number of credits
+        TextView tvGP = (TextView) findViewById(R.id.tvGP);
+        tvGP.setText(Double.toString(gp));
+
+        // Show total number of credits
+        TextView tvCredits = (TextView) findViewById(R.id.tvCR);
+        tvCredits.setText(Integer.toString(cr));
+
+        // Calculate and show to GPA
+        gpa = gp/(cr);
+        TextView tvGPA = (TextView) findViewById(R.id.tvGPA);
+        tvGPA.setText(String.format("%.2f", gpa));
     }
 
     @Override
